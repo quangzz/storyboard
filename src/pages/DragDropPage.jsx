@@ -1,44 +1,79 @@
 import React, { useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { AiOutlinePlus, AiOutlineDelete } from "react-icons/ai";
 
 const DragDropPage = () => {
-  const [images, setImages] = useState([
-    "https://placehold.co/150x100", 
-    "https://placehold.co/150x100?text=2", 
-    "https://placehold.co/150x100?text=3"
+  const [scenes, setScenes] = useState([
+    { id: "1", img: "https://placehold.co/300x200?text=Scene+1", title: "Scene 1" },
+    { id: "2", img: "https://placehold.co/300x200?text=Scene+2", title: "Scene 2" },
+    { id: "3", img: "https://placehold.co/300x200?text=Scene+3", title: "Scene 3" },
+    { id: "4", img: "https://placehold.co/300x200?text=Scene+4", title: "Scene 4" },
   ]);
 
+  // Hàm xử lý kéo-thả
   const handleDragEnd = (result) => {
-    if (!result.destination) return; // Nếu không có vị trí hợp lệ thì không làm gì
+    if (!result.destination) return;
 
-    const newImages = Array.from(images);
-    const [movedItem] = newImages.splice(result.source.index, 1);
-    newImages.splice(result.destination.index, 0, movedItem);
+    const reorderedScenes = Array.from(scenes);
+    const [movedScene] = reorderedScenes.splice(result.source.index, 1);
+    reorderedScenes.splice(result.destination.index, 0, movedScene);
 
-    setImages(newImages);
+    setScenes(reorderedScenes);
+  };
+
+  // Hàm thêm cảnh mới
+  const handleAddScene = () => {
+    const newScene = {
+      id: Date.now().toString(),
+      img: "https://placehold.co/300x200?text=New+Scene",
+      title: `Scene ${scenes.length + 1}`
+    };
+    setScenes([...scenes, newScene]);
+  };
+
+  // Hàm xóa cảnh
+  const handleDeleteScene = (id) => {
+    setScenes(scenes.filter(scene => scene.id !== id));
   };
 
   return (
-    <div className="p-5">
-      <h2 className="text-xl font-bold mb-3">Drag & Drop Storyboard</h2>
+    <div className="p-5 max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold mb-5 text-center">🎬 Storyboard Scenes</h2>
+
+      {/* Nút thêm cảnh */}
+      <button
+        className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2 mx-auto mb-5"
+        onClick={handleAddScene}
+      >
+        <AiOutlinePlus /> Add Scene
+      </button>
+
+      {/* Kéo-thả cảnh */}
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableId="storyboard-list" direction="horizontal">
+        <Droppable droppableId="scenes" direction="vertical">
           {(provided) => (
             <div
-              className="flex gap-4 overflow-x-auto p-4 border rounded shadow-lg"
+              className="space-y-4"
               {...provided.droppableProps}
               ref={provided.innerRef}
             >
-              {images.map((img, index) => (
-                <Draggable key={img} draggableId={img} index={index}>
+              {scenes.map((scene, index) => (
+                <Draggable key={scene.id} draggableId={scene.id} index={index}>
                   {(provided) => (
                     <div
-                      className="border rounded p-2 bg-white shadow-md"
+                      className="relative border rounded p-2 bg-white shadow-md flex items-center gap-4"
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
                     >
-                      <img src={img} alt={`Storyboard ${index}`} className="w-40 h-auto" />
+                      <img src={scene.img} alt={scene.title} className="w-32 h-auto rounded" />
+                      <p className="font-bold text-lg">{scene.title}</p>
+                      <button
+                        className="absolute right-2 text-red-500"
+                        onClick={() => handleDeleteScene(scene.id)}
+                      >
+                        <AiOutlineDelete size={20} />
+                      </button>
                     </div>
                   )}
                 </Draggable>
