@@ -29,6 +29,19 @@ const DragDropPage = () => {
   const [tempDescription, setTempDescription] = useState("");
   const [tempVoiceOver, setTempVoiceOver] = useState("");
 
+  const [showHistory, setShowHistory] = useState(false);
+  const [editHistory, setEditHistory] = useState([]);
+
+  // Thêm vào lịch sử mỗi khi có thay đổi
+  const addToHistory = (action, details) => {
+    const timestamp = new Date().toLocaleString();
+    setEditHistory(prev => [{
+      timestamp,
+      action,
+      details
+    }, ...prev]);
+  };
+
   // Xử lý kéo-thả chính xác
   const handleDragEnd = (result) => {
     if (!result.destination) return; // Nếu kéo ra ngoài thì không làm gì
@@ -42,7 +55,13 @@ const DragDropPage = () => {
 
   // Xóa cảnh, giữ ô trống để có thể chèn lại
   const handleDeleteScene = (id) => {
-    setScenes(scenes.map(scene => (scene.id === id ? { id, sceneNumber: "", shot: "", time: "", description: "", voiceOver: "" } : scene)));
+    setScenes(scenes.map(scene => {
+      if (scene.id === id) {
+        addToHistory('Delete Scene', `Deleted scene ${scene.sceneNumber || id}`);
+        return { id, sceneNumber: "", shot: "", time: "", description: "", voiceOver: "" };
+      }
+      return scene;
+    }));
   };
 
   // Thêm cảnh mới vào vị trí bất kỳ
@@ -61,6 +80,7 @@ const DragDropPage = () => {
       voiceOver: ""
     };
     setScenes([...scenes, newScene]);
+    addToHistory('Add Scene', `Added new scene`);
   };
 
   // Handle image change
@@ -70,7 +90,13 @@ const DragDropPage = () => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const image = event.target.result;
-        setScenes(scenes.map(scene => (scene.id === id ? { ...scene, image } : scene)));
+        setScenes(scenes.map(scene => {
+          if (scene.id === id) {
+            addToHistory('Update Image', `Updated image for scene ${scene.sceneNumber || id}`);
+            return { ...scene, image };
+          }
+          return scene;
+        }));
       };
       reader.readAsDataURL(file);
     }
@@ -85,11 +111,13 @@ const DragDropPage = () => {
       }
       
       const audioUrl = URL.createObjectURL(file);
-      setScenes(scenes.map(scene => 
-        scene.id === id 
-          ? { ...scene, audioFile: file.name, audioUrl: audioUrl }
-          : scene
-      ));
+      setScenes(scenes.map(scene => {
+        if (scene.id === id) {
+          addToHistory('Upload Audio', `Uploaded audio "${file.name}" for scene ${scene.sceneNumber || id}`);
+          return { ...scene, audioFile: file.name, audioUrl: audioUrl };
+        }
+        return scene;
+      }));
     }
   };
 
@@ -108,11 +136,13 @@ const DragDropPage = () => {
   };
 
   const handleSave = (id) => {
-    setScenes(scenes.map(scene => 
-      scene.id === id 
-        ? { ...scene, description: tempDescription, voiceOver: tempVoiceOver }
-        : scene
-    ));
+    setScenes(scenes.map(scene => {
+      if (scene.id === id) {
+        addToHistory('Update Text', `Updated description/voice over for scene ${scene.sceneNumber || id}`);
+        return { ...scene, description: tempDescription, voiceOver: tempVoiceOver };
+      }
+      return scene;
+    }));
     setEditingScene(null);
   };
 
@@ -172,7 +202,12 @@ const DragDropPage = () => {
               New
             </button>
             <button className="px-3 py-0.5 border rounded text-sm bg-blue-100">Boarder</button>
-            <button className="px-3 py-0.5 border rounded text-sm">History</button>
+            <button 
+              className="px-3 py-0.5 border rounded text-sm hover:bg-gray-100"
+              onClick={() => setShowHistory(true)}
+            >
+              History
+            </button>
           </div>
           <div>
             <button className="px-3 py-0.5 border rounded text-sm bg-green-500 text-white">
@@ -180,6 +215,37 @@ const DragDropPage = () => {
             </button>
           </div>
         </div>
+
+        {/* History Modal */}
+        {showHistory && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Edit History</h2>
+                <button 
+                  onClick={() => setShowHistory(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <BsX size={24} />
+                </button>
+              </div>
+              <div className="space-y-2">
+                {editHistory.map((entry, index) => (
+                  <div key={index} className="border-b pb-2">
+                    <div className="text-sm text-gray-500">{entry.timestamp}</div>
+                    <div className="font-medium">{entry.action}</div>
+                    <div className="text-gray-600">{entry.details}</div>
+                  </div>
+                ))}
+                {editHistory.length === 0 && (
+                  <div className="text-center text-gray-500 py-4">
+                    No edit history yet
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Scenes */}
         <DragDropContext onDragEnd={handleDragEnd}>
