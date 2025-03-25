@@ -1,33 +1,74 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AiOutlineUpload } from 'react-icons/ai';
 
 const UploadPage = () => {
-  const [fileName, setFileName] = useState(null);
+  const navigate = useNavigate();
+  const [file, setFile] = useState(null);
+  const [isUploaded, setIsUploaded] = useState(false);
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
+  };
 
-    const allowedTypes = ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "text/plain"];
-    if (!allowedTypes.includes(file.type)) {
-      alert("Chỉ chấp nhận file .docx, .xlsx, .txt");
-      return;
+  const handleUpload = () => {
+    if (file) {
+      // Xử lý upload file ở đây
+      setIsUploaded(true);
     }
-
-    setFileName(file.name);
-    // TODO: upload logic here
-    console.log("Tải lên:", file);
   };
 
   return (
-    <div className="flex flex-col justify-center items-center h-screen bg-gray-100">
-      <h2 className="text-2xl font-bold mb-4">📂 Create new project with</h2>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="max-w-2xl w-full p-8 bg-white rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold text-center mb-8">Upload Script</h1>
+        
+        {!isUploaded ? (
+          <div className="space-y-6">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+              <AiOutlineUpload className="mx-auto text-4xl text-gray-400 mb-4" />
+              <input
+                type="file"
+                onChange={handleFileChange}
+                className="hidden"
+                id="file-upload"
+                accept=".txt,.doc,.docx"
+              />
+              <label
+                htmlFor="file-upload"
+                className="cursor-pointer text-purple-600 hover:text-purple-700"
+              >
+                Click to upload
+              </label>
+              <p className="text-gray-500 mt-2">or drag and drop</p>
+              <p className="text-sm text-gray-400 mt-2">TXT, DOC, DOCX up to 10MB</p>
+            </div>
 
-      <label className="w-80 bg-green-500 text-white text-center py-4 px-6 rounded-xl cursor-pointer hover:bg-green-600 transition">
-        <input type="file" hidden onChange={handleFileChange} />
-        {fileName ? `✅ ${fileName}` : "Upload .docx, .xlsx, .txt"}
-      </label>
-
-      <p className="mt-3 text-gray-500">Hỗ trợ file: Word (.docx), Excel (.xlsx), Text (.txt)</p>
+            <button
+              onClick={handleUpload}
+              disabled={!file}
+              className={`w-full py-3 rounded-lg text-white ${
+                file ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-400 cursor-not-allowed'
+              }`}
+            >
+              Upload
+            </button>
+          </div>
+        ) : (
+          <div className="text-center space-y-4">
+            <div className="text-green-500 text-4xl mb-4">✓</div>
+            <h2 className="text-xl font-semibold">Upload Successful!</h2>
+            <p className="text-gray-600">Your script has been uploaded successfully.</p>
+            <button
+              onClick={() => navigate('/drag-drop')}
+              className="mt-6 bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700"
+            >
+              Go to Storyboard
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

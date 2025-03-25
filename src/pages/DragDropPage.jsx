@@ -67,6 +67,19 @@ const DragDropPage = () => {
     setScenes([...scenes, newScene]);
   };
 
+  // Handle image change
+  const handleImageChange = (e, id) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const image = event.target.result;
+        setScenes(scenes.map(scene => (scene.id === id ? { ...scene, image } : scene)));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto py-4">
@@ -146,42 +159,63 @@ const DragDropPage = () => {
                         className="text-center"
                       >
                         {/* Scene Navigation */}
-                        <div className="flex justify-center gap-4 mb-1">
-                          <span>×</span>
-                          <span>⟪</span>
-                          <span>⟫</span>
+                        <div className="flex gap-1 mb-2 border w-fit">
+                          <button className="px-2 py-1 hover:bg-gray-100">×</button>
+                          <button className="px-2 py-1 hover:bg-gray-100">≪</button>
+                          <button className="px-2 py-1 hover:bg-gray-100">≫</button>
                         </div>
 
                         {/* Scene Info */}
-                        <div className="inline-flex gap-4 text-sm mb-2">
-                          <span>SCENE#: {scene.sceneNumber}</span>
-                          <span>SHOT#: {scene.shot}</span>
-                          <span>TIME#: {scene.time}</span>
+                        <div className="flex border mb-2">
+                          <div className="flex-1 border-r px-2 py-1 flex items-center">
+                            <span className="font-bold mr-1">SCENE#:</span>
+                            <span>{scene.sceneNumber}</span>
+                          </div>
+                          <div className="flex-1 border-r px-2 py-1 flex items-center">
+                            <span className="font-bold mr-1">SHOT#:</span>
+                            <span>{scene.shot}</span>
+                          </div>
+                          <div className="flex-1 px-2 py-1 flex items-center">
+                            <span className="font-bold mr-1">TIME#:</span>
+                            <span>{scene.time}</span>
+                          </div>
                         </div>
 
                         {/* Scene Frame */}
-                        <div className="aspect-[16/9] max-w-2xl mx-auto mb-4 border-2 border-red-500 border-dashed p-4">
-                          <div className="w-full h-full border-2 border-red-500 flex items-center justify-center">
-                            {/* Placeholder for scene content */}
+                        <div className="border border-blue-500 mb-2 mx-auto" style={{ width: '390px' }}>
+                          <div className="relative" style={{ width: '390px', height: '220px' }}>
+                            {scene.image ? (
+                              <img 
+                                src={scene.image} 
+                                alt={`Scene ${scene.sceneNumber}`}
+                                className="w-full h-full object-cover"
+                                style={{ width: '390px', height: '220px' }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-sm text-gray-500 cursor-pointer"
+                                   onClick={() => document.getElementById(`image-upload-${scene.id}`).click()}>
+                                390 x 220
+                              </div>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              id={`image-upload-${scene.id}`}
+                              onChange={(e) => handleImageChange(e, scene.id)}
+                            />
                           </div>
                         </div>
 
                         {/* Description */}
-                        <div className="max-w-2xl mx-auto mb-2 text-sm">
+                        <div className="text-left mb-2 px-2">
                           {scene.description}
                         </div>
 
                         {/* Voice Over */}
-                        <div className="max-w-2xl mx-auto text-sm">
-                          <div>Voice over</div>
+                        <div className="border mt-2 p-2 text-left">
+                          <div className="text-gray-400 mb-1">Voice over</div>
                           <div>{scene.voiceOver}</div>
-                        </div>
-
-                        {/* Scene Navigation */}
-                        <div className="flex justify-center gap-4 mt-2 mb-4">
-                          <span>×</span>
-                          <span>⟪</span>
-                          <span>⟫</span>
                         </div>
                       </div>
                     )}
