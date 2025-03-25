@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { AiOutlinePlus, AiOutlineDelete } from "react-icons/ai";
 import { BsChevronLeft, BsChevronRight, BsX } from 'react-icons/bs';
+import { useNavigate } from 'react-router-dom';
 
 const DragDropPage = () => {
+  const navigate = useNavigate();
   const [scenes, setScenes] = useState([
     { 
       id: "1", 
@@ -69,7 +71,15 @@ const DragDropPage = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto py-4">
         {/* Title */}
-        <h1 className="text-2xl font-bold text-center mb-1">AI Storyboard Generator</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">AI Storyboard Generator</h1>
+          <button 
+            onClick={() => navigate('/upload')}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+          >
+            Upload Script
+          </button>
+        </div>
         
         {/* Navigation */}
         <div className="text-center mb-4">
