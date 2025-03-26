@@ -4,6 +4,7 @@ import { AiOutlinePlus, AiOutlineDelete } from "react-icons/ai";
 import { BsChevronLeft, BsChevronRight, BsX } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
 import { useScenes } from '../context/SceneContext';
+import Header from '../components/Header';
 
 const Scene = ({ scene, index, onDelete, onEdit, onImageChange, onAudioUpload, onDeleteAudio, editingScene, tempDescription, tempVoiceOver, setTempDescription, setTempVoiceOver, handleSave }) => {
   return (
@@ -283,6 +284,7 @@ const DragDropPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header title="Storyboard Generator" />
       <div className="max-w-4xl mx-auto py-4">
         {/* Header Menu */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">

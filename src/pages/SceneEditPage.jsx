@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BsChevronLeft, BsChevronRight } from 'react-icons/bs';
+import { BsChevronLeft, BsChevronRight, BsGear } from 'react-icons/bs';
 import { AiOutlineZoomIn, AiOutlineZoomOut } from 'react-icons/ai';
 import { useScenes } from '../context/SceneContext';
+import Header from '../components/Header';
 
 const ToggleSwitch = ({ label, isOn, onToggle }) => {
   return (
@@ -30,7 +31,7 @@ const ToggleSwitch = ({ label, isOn, onToggle }) => {
 const SceneEditPage = () => {
   const navigate = useNavigate();
   const { sceneId } = useParams();
-  const { getScene, updateScene } = useScenes();
+  const { getScene, updateScene, getAllScenes } = useScenes();
   
   const [sceneData, setSceneData] = useState({
     sceneNumber: '1.3',
@@ -44,6 +45,28 @@ const SceneEditPage = () => {
     improvePrompt: false,
     image: null
   });
+
+  const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
+  const [allScenes, setAllScenes] = useState([]);
+
+  // Load all scenes and find current scene index
+  React.useEffect(() => {
+    const scenes = getAllScenes();
+    setAllScenes(scenes);
+    const index = scenes.findIndex(scene => scene.id === sceneId);
+    setCurrentSceneIndex(index);
+  }, [sceneId, getAllScenes]);
+
+  const handleNavigation = (direction) => {
+    // Save current changes before navigation
+    handleSave();
+
+    if (direction === 'next' && currentSceneIndex < allScenes.length - 1) {
+      navigate(`/scene/${allScenes[currentSceneIndex + 1].id}`);
+    } else if (direction === 'prev' && currentSceneIndex > 0) {
+      navigate(`/scene/${allScenes[currentSceneIndex - 1].id}`);
+    }
+  };
 
   const [zoomLevel, setZoomLevel] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -122,92 +145,126 @@ const SceneEditPage = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <button 
-            onClick={() => navigate(-1)}
-            className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 flex items-center gap-2"
-          >
-            <BsChevronLeft /> Back
-          </button>
-          <h1 className="text-2xl font-bold">Scene Edit</h1>
-          <div className="w-24"></div>
-        </div>
+  const handleSave = () => {
+    // Call updateScene from context to save changes
+    updateScene(sceneId, sceneData);
+  };
 
-        <div className="grid grid-cols-2 gap-6">
-          {/* Left Column */}
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            {/* Scene Info */}
-            <div className="grid grid-cols-3 gap-4 mb-4 border-b pb-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">SCENE#:</label>
-                <input
-                  type="text"
-                  value={sceneData.sceneNumber}
-                  onChange={(e) => handleInputChange('sceneNumber', e.target.value)}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-medium mb-1">SHOT#:</label>
-                <div className="flex gap-2">
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header showBack title="Scene Edit" />
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              {/* Scene Info */}
+              <div className="grid grid-cols-3 gap-4 mb-4 border-b pb-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">SCENE#:</label>
                   <input
                     type="text"
-                    value={sceneData.shot}
-                    onChange={(e) => handleInputChange('shot', e.target.value)}
-                    className="flex-1 p-2 border rounded"
+                    value={sceneData.sceneNumber}
+                    onChange={(e) => handleInputChange('sceneNumber', e.target.value)}
+                    className="w-full p-2 border rounded"
                   />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium mb-1">SHOT#:</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={sceneData.shot}
+                      onChange={(e) => handleInputChange('shot', e.target.value)}
+                      className="flex-1 p-2 border rounded"
+                    />
+                    <input
+                      type="text"
+                      value={sceneData.shotNote}
+                      onChange={(e) => handleInputChange('shotNote', e.target.value)}
+                      className="w-24 p-2 border rounded"
+                      placeholder="Note"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">TIME#:</label>
                   <input
                     type="text"
-                    value={sceneData.shotNote}
-                    onChange={(e) => handleInputChange('shotNote', e.target.value)}
-                    className="w-24 p-2 border rounded"
-                    placeholder="Note"
+                    value={sceneData.time}
+                    onChange={(e) => handleInputChange('time', e.target.value)}
+                    className="w-full p-2 border rounded"
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">TIME#:</label>
-                <input
-                  type="text"
-                  value={sceneData.time}
-                  onChange={(e) => handleInputChange('time', e.target.value)}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-            </div>
 
-            {/* Scene Frame */}
-            <div className="border border-gray-300 rounded-lg mb-4 overflow-hidden bg-gray-50">
-              <div className="aspect-[16/9] relative">
-                {sceneData.image ? (
-                  <div className="relative w-full h-full group overflow-hidden">
-                    <div 
-                      className="w-full h-full"
-                      onMouseDown={handleMouseDown}
-                      onMouseMove={handleMouseMove}
-                      onMouseUp={handleMouseUp}
-                      onMouseLeave={handleMouseUp}
-                      style={{ cursor: zoomLevel > 1 ? 'move' : 'default' }}
-                    >
-                      <img 
-                        ref={imageRef}
-                        src={sceneData.image} 
-                        alt="Scene preview" 
-                        className="w-full h-full object-cover transition-transform duration-200"
-                        style={{ 
-                          transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
-                          transformOrigin: 'center'
-                        }}
-                      />
+              {/* Scene Frame */}
+              <div className="border border-gray-300 rounded-lg mb-4 overflow-hidden bg-gray-50">
+                <div className="aspect-[16/9] relative">
+                  {sceneData.image ? (
+                    <div className="relative w-full h-full group overflow-hidden">
+                      <div 
+                        className="w-full h-full"
+                        onMouseDown={handleMouseDown}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseUp}
+                        style={{ cursor: zoomLevel > 1 ? 'move' : 'default' }}
+                      >
+                        <img 
+                          ref={imageRef}
+                          src={sceneData.image} 
+                          alt="Scene preview" 
+                          className="w-full h-full object-cover transition-transform duration-200"
+                          style={{ 
+                            transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
+                            transformOrigin: 'center'
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Controls Container - Always visible */}
+                      <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/50 to-transparent">
+                        <div className="absolute bottom-4 left-4">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            id="scene-image"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                          <label 
+                            htmlFor="scene-image"
+                            className="cursor-pointer px-4 py-2 bg-white rounded hover:bg-gray-100 transition-colors"
+                          >
+                            Change Image
+                          </label>
+                        </div>
+                        
+                        {/* Zoom Controls - Right side */}
+                        <div className="absolute bottom-4 right-4 flex gap-2">
+                          <button
+                            onClick={handleZoomOut}
+                            className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={zoomLevel <= 1}
+                          >
+                            <AiOutlineZoomOut className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={handleZoomIn}
+                            className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={zoomLevel >= 2}
+                          >
+                            <AiOutlineZoomIn className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    
-                    {/* Controls Container - Always visible */}
-                    <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/50 to-transparent">
-                      <div className="absolute bottom-4 left-4">
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-sm text-gray-500 mb-2">390 x 220</div>
                         <input
                           type="file"
                           accept="image/*"
@@ -217,126 +274,97 @@ const SceneEditPage = () => {
                         />
                         <label 
                           htmlFor="scene-image"
-                          className="cursor-pointer px-4 py-2 bg-white rounded hover:bg-gray-100 transition-colors"
+                          className="cursor-pointer px-4 py-2 bg-gray-100 rounded hover:bg-gray-200"
                         >
-                          Change Image
+                          Upload Image
                         </label>
                       </div>
-                      
-                      {/* Zoom Controls - Right side */}
-                      <div className="absolute bottom-4 right-4 flex gap-2">
-                        <button
-                          onClick={handleZoomOut}
-                          className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          disabled={zoomLevel <= 1}
-                        >
-                          <AiOutlineZoomOut className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={handleZoomIn}
-                          className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          disabled={zoomLevel >= 2}
-                        >
-                          <AiOutlineZoomIn className="w-5 h-5" />
-                        </button>
-                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-sm text-gray-500 mb-2">390 x 220</div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        id="scene-image"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                      <label 
-                        htmlFor="scene-image"
-                        className="cursor-pointer px-4 py-2 bg-gray-100 rounded hover:bg-gray-200"
-                      >
-                        Upload Image
-                      </label>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Description:</label>
+                <textarea
+                  value={sceneData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  className="w-full p-2 border rounded"
+                  rows="4"
+                />
+              </div>
+
+              {/* Navigation */}
+              <div className="flex justify-between">
+                <button 
+                  className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => handleNavigation('prev')}
+                  disabled={currentSceneIndex === 0}
+                >
+                  <BsChevronLeft /> Previous
+                </button>
+                <button 
+                  className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => handleNavigation('next')}
+                  disabled={currentSceneIndex === allScenes.length - 1}
+                >
+                  Next <BsChevronRight />
+                </button>
               </div>
             </div>
 
-            {/* Description */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Description:</label>
-              <textarea
-                value={sceneData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                className="w-full p-2 border rounded"
-                rows="4"
-              />
-            </div>
-
-            {/* Navigation */}
-            <div className="flex justify-between">
-              <button className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
-                <BsChevronLeft /> Previous
-              </button>
-              <button className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
-                Next <BsChevronRight />
-              </button>
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Prompting */}
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h2 className="text-lg font-bold mb-4">Prompting</h2>
-              <textarea
-                value={sceneData.prompt}
-                onChange={(e) => handleInputChange('prompt', e.target.value)}
-                className="w-full p-2 border rounded mb-4"
-                rows="4"
-              />
-              <div className="flex flex-col gap-2 mb-4">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={sceneData.inpainting}
-                    onChange={() => handleToggle('inpainting')}
-                    className="form-checkbox h-4 w-4"
-                  />
-                  <span>Inpainting</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={sceneData.improvePrompt}
-                    onChange={() => handleToggle('improvePrompt')}
-                    className="form-checkbox h-4 w-4"
-                  />
-                  <span>Improve Prompt</span>
-                </label>
+            {/* Right Column */}
+            <div className="space-y-6">
+              {/* Prompting */}
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <h2 className="text-lg font-bold mb-4">Prompting</h2>
+                <textarea
+                  value={sceneData.prompt}
+                  onChange={(e) => handleInputChange('prompt', e.target.value)}
+                  className="w-full p-2 border rounded mb-4"
+                  rows="4"
+                />
+                <div className="flex flex-col gap-2 mb-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={sceneData.inpainting}
+                      onChange={() => handleToggle('inpainting')}
+                      className="form-checkbox h-4 w-4"
+                    />
+                    <span>Inpainting</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={sceneData.improvePrompt}
+                      onChange={() => handleToggle('improvePrompt')}
+                      className="form-checkbox h-4 w-4"
+                    />
+                    <span>Improve Prompt</span>
+                  </label>
+                </div>
+                <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                  Generate
+                </button>
               </div>
-              <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
-                Generate
-              </button>
-            </div>
 
-            {/* Character Input */}
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h2 className="text-lg font-bold mb-4">Character Input</h2>
-              <textarea
-                value={sceneData.characterInput}
-                onChange={(e) => handleInputChange('characterInput', e.target.value)}
-                className="w-full p-2 border rounded mb-4"
-                rows="4"
-                placeholder="Enter character details..."
-              />
-              <div className="grid grid-cols-3 gap-4">
-                <input type="text" className="p-2 border rounded" placeholder="Input 1" />
-                <input type="text" className="p-2 border rounded" placeholder="Input 2" />
-                <input type="text" className="p-2 border rounded" placeholder="Input 3" />
+              {/* Character Input */}
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <h2 className="text-lg font-bold mb-4">Character Input</h2>
+                <textarea
+                  value={sceneData.characterInput}
+                  onChange={(e) => handleInputChange('characterInput', e.target.value)}
+                  className="w-full p-2 border rounded mb-4"
+                  rows="4"
+                  placeholder="Enter character details..."
+                />
+                <div className="grid grid-cols-3 gap-4">
+                  <input type="text" className="p-2 border rounded" placeholder="Input 1" />
+                  <input type="text" className="p-2 border rounded" placeholder="Input 2" />
+                  <input type="text" className="p-2 border rounded" placeholder="Input 3" />
+                </div>
               </div>
             </div>
           </div>

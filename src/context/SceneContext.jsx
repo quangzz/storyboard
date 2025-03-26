@@ -40,6 +40,10 @@ export const SceneProvider = ({ children }) => {
     return scenes.find(scene => scene.id === id);
   };
 
+  const getAllScenes = () => {
+    return scenes;
+  };
+
   return (
     <SceneContext.Provider value={{ 
       scenes, 
@@ -47,7 +51,8 @@ export const SceneProvider = ({ children }) => {
       updateScene, 
       addScene, 
       deleteScene,
-      getScene 
+      getScene,
+      getAllScenes
     }}>
       {children}
     </SceneContext.Provider>
