@@ -1,38 +1,19 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BsChevronLeft, BsChevronRight, BsGear } from 'react-icons/bs';
+import { BsChevronLeft, BsChevronRight, BsMusicNote } from 'react-icons/bs';
 import { AiOutlineZoomIn, AiOutlineZoomOut } from 'react-icons/ai';
-import { useScenes } from '../context/SceneContext';
-import Header from '../components/Header';
-
-const ToggleSwitch = ({ label, isOn, onToggle }) => {
-  return (
-    <label className="flex items-center gap-2 cursor-pointer">
-      <div 
-        className="relative w-11 h-6 bg-gray-200 rounded-full transition-colors duration-300 ease-in-out"
-        onClick={onToggle}
-      >
-        <div 
-          className={`absolute w-5 h-5 bg-white rounded-full top-0.5 left-0.5 transition-transform duration-300 ease-in-out shadow-sm
-            ${isOn ? 'transform translate-x-5 bg-white' : 'transform translate-x-0'}
-          `}
-        />
-        <div 
-          className={`absolute inset-0 rounded-full transition-colors duration-300 ease-in-out
-            ${isOn ? 'bg-green-500' : 'bg-gray-300'}
-          `}
-        />
-      </div>
-      <span className="text-sm font-medium text-gray-700">{label}</span>
-    </label>
-  );
-};
 
 const SceneEditPage = () => {
   const navigate = useNavigate();
   const { sceneId } = useParams();
-  const { getScene, updateScene, getAllScenes } = useScenes();
-  
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imageRef = useRef(null);
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [audioName, setAudioName] = useState('');
+
   const [sceneData, setSceneData] = useState({
     sceneNumber: '1.3',
     shot: 'Zoom-out',
@@ -46,45 +27,10 @@ const SceneEditPage = () => {
     image: null
   });
 
-  const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
-  const [allScenes, setAllScenes] = useState([]);
-
-  // Load all scenes and find current scene index
-  React.useEffect(() => {
-    const scenes = getAllScenes();
-    setAllScenes(scenes);
-    const index = scenes.findIndex(scene => scene.id === sceneId);
-    setCurrentSceneIndex(index);
-  }, [sceneId, getAllScenes]);
-
-  const handleNavigation = (direction) => {
-    // Save current changes before navigation
-    handleSave();
-
-    if (direction === 'next' && currentSceneIndex < allScenes.length - 1) {
-      navigate(`/scene/${allScenes[currentSceneIndex + 1].id}`);
-    } else if (direction === 'prev' && currentSceneIndex > 0) {
-      navigate(`/scene/${allScenes[currentSceneIndex - 1].id}`);
-    }
-  };
-
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const imageRef = useRef(null);
-
   const handleInputChange = (field, value) => {
     setSceneData(prev => ({
       ...prev,
       [field]: value
-    }));
-  };
-
-  const handleToggle = (field) => {
-    setSceneData(prev => ({
-      ...prev,
-      [field]: !prev[field]
     }));
   };
 
@@ -102,6 +48,15 @@ const SceneEditPage = () => {
     }
   };
 
+  const handleAudioUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const audioUrl = URL.createObjectURL(file);
+      setAudioUrl(audioUrl);
+      setAudioName(file.name);
+    }
+  };
+
   const handleMouseDown = (e) => {
     if (zoomLevel > 1) {
       setIsDragging(true);
@@ -114,8 +69,8 @@ const SceneEditPage = () => {
 
   const handleMouseMove = (e) => {
     if (isDragging && zoomLevel > 1) {
-      const maxX = (imageRef.current.width * (zoomLevel - 1)) / 2;
-      const maxY = (imageRef.current.height * (zoomLevel - 1)) / 2;
+      const maxX = (imageRef.current?.width * (zoomLevel - 1)) / 2 || 0;
+      const maxY = (imageRef.current?.height * (zoomLevel - 1)) / 2 || 0;
       
       const newX = e.clientX - dragStart.x;
       const newY = e.clientY - dragStart.y;
@@ -133,9 +88,6 @@ const SceneEditPage = () => {
 
   const handleZoomIn = () => {
     setZoomLevel(prev => Math.min(prev + 0.2, 2));
-    if (zoomLevel === 1) {
-      setPosition({ x: 0, y: 0 });
-    }
   };
 
   const handleZoomOut = () => {
@@ -145,115 +97,108 @@ const SceneEditPage = () => {
     }
   };
 
-  const handleSave = () => {
-    // Call updateScene from context to save changes
-    updateScene(sceneId, sceneData);
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header showBack title="Scene Edit" />
-
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 gap-6">
-            {/* Left Column */}
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              {/* Scene Info */}
-              <div className="grid grid-cols-3 gap-4 mb-4 border-b pb-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">SCENE#:</label>
-                  <input
-                    type="text"
-                    value={sceneData.sceneNumber}
-                    onChange={(e) => handleInputChange('sceneNumber', e.target.value)}
-                    className="w-full p-2 border rounded"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium mb-1">SHOT#:</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={sceneData.shot}
-                      onChange={(e) => handleInputChange('shot', e.target.value)}
-                      className="flex-1 p-2 border rounded"
-                    />
-                    <input
-                      type="text"
-                      value={sceneData.shotNote}
-                      onChange={(e) => handleInputChange('shotNote', e.target.value)}
-                      className="w-24 p-2 border rounded"
-                      placeholder="Note"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">TIME#:</label>
-                  <input
-                    type="text"
-                    value={sceneData.time}
-                    onChange={(e) => handleInputChange('time', e.target.value)}
-                    className="w-full p-2 border rounded"
-                  />
-                </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl p-6">
+        <div className="grid grid-cols-2 gap-8">
+          {/* Left Column - Scene Display */}
+          <div>
+            {/* Scene Header */}
+            <div className="grid grid-cols-3 mb-6 text-sm border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white">
+              <div className="p-3 border-r border-gray-200 hover:bg-gray-50 transition-colors">
+                <div className="font-bold text-gray-700 mb-1">SCENE#:</div>
+                <div className="text-gray-600">{sceneData.sceneNumber}</div>
               </div>
+              <div className="p-3 border-r border-gray-200 hover:bg-gray-50 transition-colors">
+                <div className="font-bold text-gray-700 mb-1">SHOT#:</div>
+                <div className="text-gray-600">{sceneData.shot}</div>
+                <div className="text-xs text-gray-500">{sceneData.shotNote}</div>
+              </div>
+              <div className="p-3 hover:bg-gray-50 transition-colors">
+                <div className="font-bold text-gray-700 mb-1">TIME#:</div>
+                <div className="text-gray-600">{sceneData.time}</div>
+              </div>
+            </div>
 
-              {/* Scene Frame */}
-              <div className="border border-gray-300 rounded-lg mb-4 overflow-hidden bg-gray-50">
-                <div className="aspect-[16/9] relative">
-                  {sceneData.image ? (
-                    <div className="relative w-full h-full group overflow-hidden">
-                      <div 
-                        className="w-full h-full"
-                        onMouseDown={handleMouseDown}
-                        onMouseMove={handleMouseMove}
-                        onMouseUp={handleMouseUp}
-                        onMouseLeave={handleMouseUp}
-                        style={{ cursor: zoomLevel > 1 ? 'move' : 'default' }}
-                      >
-                        <img 
-                          ref={imageRef}
-                          src={sceneData.image} 
-                          alt="Scene preview" 
-                          className="w-full h-full object-cover transition-transform duration-200"
-                          style={{ 
-                            transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
-                            transformOrigin: 'center'
-                          }}
-                        />
-                      </div>
-                      
-                      {/* Controls Container - Always visible */}
-                      <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/50 to-transparent">
-                        <div className="absolute bottom-4 left-4">
+            {/* Scene Image */}
+            <div className="border border-gray-200 rounded-xl overflow-hidden shadow-md mb-6 bg-white">
+              <div className="aspect-[16/9] bg-gray-50 relative overflow-hidden">
+                {sceneData.image ? (
+                  <div 
+                    className="w-full h-full"
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                    style={{ cursor: zoomLevel > 1 ? 'move' : 'default' }}
+                  >
+                    <img 
+                      ref={imageRef}
+                      src={sceneData.image} 
+                      alt="Scene" 
+                      className="w-full h-full object-contain transition-transform duration-300 ease-out"
+                      style={{ 
+                        transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
+                        transformOrigin: 'center'
+                      }}
+                    />
+
+                    {/* Image Controls */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
+                      <div className="flex justify-between items-center">
+                        <div className="flex gap-3">
                           <input
                             type="file"
                             accept="image/*"
-                            id="scene-image"
+                            id="scene-image-change"
                             onChange={handleImageUpload}
                             className="hidden"
                           />
                           <label 
-                            htmlFor="scene-image"
-                            className="cursor-pointer px-4 py-2 bg-white rounded hover:bg-gray-100 transition-colors"
+                            htmlFor="scene-image-change"
+                            className="cursor-pointer px-4 py-2 bg-white/90 text-gray-700 rounded-lg hover:bg-white hover:shadow-md transition-all duration-200 font-medium backdrop-blur-sm"
                           >
                             Change Image
                           </label>
+
+                          <input
+                            type="file"
+                            accept=".mp3,.wav"
+                            id="scene-audio"
+                            onChange={handleAudioUpload}
+                            className="hidden"
+                          />
+                          <label 
+                            htmlFor="scene-audio"
+                            className="cursor-pointer px-4 py-2 bg-white/90 text-gray-700 rounded-lg hover:bg-white hover:shadow-md transition-all duration-200 font-medium backdrop-blur-sm flex items-center gap-2"
+                          >
+                            <BsMusicNote className="w-5 h-5" />
+                            <span>Upload Audio</span>
+                          </label>
+
+                          {audioUrl && (
+                            <div className="flex items-center gap-2 px-4 py-2 bg-purple-100/90 text-purple-700 rounded-lg backdrop-blur-sm">
+                              <BsMusicNote className="w-4 h-4 flex-shrink-0" />
+                              <span className="text-sm truncate max-w-[120px] font-medium">{audioName}</span>
+                              <audio controls className="h-8 w-32">
+                                <source src={audioUrl} type="audio/mpeg" />
+                                Your browser does not support the audio element.
+                              </audio>
+                            </div>
+                          )}
                         </div>
                         
-                        {/* Zoom Controls - Right side */}
-                        <div className="absolute bottom-4 right-4 flex gap-2">
+                        <div className="flex gap-2">
                           <button
                             onClick={handleZoomOut}
-                            className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="p-2 bg-white/90 text-gray-700 rounded-lg shadow-sm hover:bg-white hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
                             disabled={zoomLevel <= 1}
                           >
                             <AiOutlineZoomOut className="w-5 h-5" />
                           </button>
                           <button
                             onClick={handleZoomIn}
-                            className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="p-2 bg-white/90 text-gray-700 rounded-lg shadow-sm hover:bg-white hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
                             disabled={zoomLevel >= 2}
                           >
                             <AiOutlineZoomIn className="w-5 h-5" />
@@ -261,10 +206,12 @@ const SceneEditPage = () => {
                         </div>
                       </div>
                     </div>
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="text-sm text-gray-500 mb-2">390 x 220</div>
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center p-4">
+                    <div className="text-center space-y-6">
+                      <div className="text-sm text-gray-400 font-medium">390 x 220</div>
+                      <div className="flex gap-4">
                         <input
                           type="file"
                           accept="image/*"
@@ -274,98 +221,100 @@ const SceneEditPage = () => {
                         />
                         <label 
                           htmlFor="scene-image"
-                          className="cursor-pointer px-4 py-2 bg-gray-100 rounded hover:bg-gray-200"
+                          className="cursor-pointer px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 font-medium shadow-lg shadow-purple-200 hover:shadow-purple-300"
                         >
                           Upload Image
                         </label>
+
+                        <input
+                          type="file"
+                          accept=".mp3,.wav"
+                          id="scene-audio-initial"
+                          onChange={handleAudioUpload}
+                          className="hidden"
+                        />
+                        <label 
+                          htmlFor="scene-audio-initial"
+                          className="cursor-pointer px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 font-medium shadow-lg shadow-purple-200 hover:shadow-purple-300 flex items-center gap-2"
+                        >
+                          <BsMusicNote className="w-5 h-5" />
+                          <span>Upload Audio</span>
+                        </label>
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
-              {/* Description */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Description:</label>
+              {/* Description textarea */}
+              <div className="p-4 border-t border-gray-200">
                 <textarea
                   value={sceneData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  className="w-full p-2 border rounded"
-                  rows="4"
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 resize-none"
+                  rows={4}
+                  placeholder="Enter scene description..."
                 />
-              </div>
-
-              {/* Navigation */}
-              <div className="flex justify-between">
-                <button 
-                  className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => handleNavigation('prev')}
-                  disabled={currentSceneIndex === 0}
-                >
-                  <BsChevronLeft /> Previous
-                </button>
-                <button 
-                  className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => handleNavigation('next')}
-                  disabled={currentSceneIndex === allScenes.length - 1}
-                >
-                  Next <BsChevronRight />
-                </button>
               </div>
             </div>
 
-            {/* Right Column */}
-            <div className="space-y-6">
-              {/* Prompting */}
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h2 className="text-lg font-bold mb-4">Prompting</h2>
-                <textarea
-                  value={sceneData.prompt}
-                  onChange={(e) => handleInputChange('prompt', e.target.value)}
-                  className="w-full p-2 border rounded mb-4"
-                  rows="4"
-                />
-                <div className="flex flex-col gap-2 mb-4">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={sceneData.inpainting}
-                      onChange={() => handleToggle('inpainting')}
-                      className="form-checkbox h-4 w-4"
-                    />
-                    <span>Inpainting</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={sceneData.improvePrompt}
-                      onChange={() => handleToggle('improvePrompt')}
-                      className="form-checkbox h-4 w-4"
-                    />
-                    <span>Improve Prompt</span>
-                  </label>
-                </div>
-                <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
-                  Generate
-                </button>
-              </div>
+            {/* Navigation Buttons */}
+            <div className="flex justify-between">
+              <button className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 font-medium shadow-lg shadow-purple-200 hover:shadow-purple-300 flex items-center gap-2">
+                <BsChevronLeft className="w-5 h-5" /> Back
+              </button>
+              <button className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 font-medium shadow-lg shadow-purple-200 hover:shadow-purple-300 flex items-center gap-2">
+                Next <BsChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
 
-              {/* Character Input */}
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h2 className="text-lg font-bold mb-4">Character Input</h2>
-                <textarea
-                  value={sceneData.characterInput}
-                  onChange={(e) => handleInputChange('characterInput', e.target.value)}
-                  className="w-full p-2 border rounded mb-4"
-                  rows="4"
-                  placeholder="Enter character details..."
+          {/* Right Column - Prompting */}
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold mb-4 text-gray-800">Prompting</h2>
+              <textarea
+                value={sceneData.prompt}
+                onChange={(e) => handleInputChange('prompt', e.target.value)}
+                className="w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 resize-none shadow-sm"
+                rows={6}
+                placeholder="Enter your prompt..."
+              />
+            </div>
+
+            <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-lg">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sceneData.inpainting}
+                  onChange={(e) => handleInputChange('inpainting', e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                 />
-                <div className="grid grid-cols-3 gap-4">
-                  <input type="text" className="p-2 border rounded" placeholder="Input 1" />
-                  <input type="text" className="p-2 border rounded" placeholder="Input 2" />
-                  <input type="text" className="p-2 border rounded" placeholder="Input 3" />
-                </div>
-              </div>
+                <span className="text-gray-700">Inpainting</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sceneData.improvePrompt}
+                  onChange={(e) => handleInputChange('improvePrompt', e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                />
+                <span className="text-gray-700">Improve Prompt</span>
+              </label>
+              <button className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 font-medium shadow-lg shadow-green-200 hover:shadow-green-300">
+                Generate
+              </button>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-bold mb-4 text-gray-800">Character Input</h2>
+              <input
+                type="text"
+                value={sceneData.characterInput}
+                onChange={(e) => handleInputChange('characterInput', e.target.value)}
+                className="w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 shadow-sm"
+                placeholder="Enter character details..."
+              />
             </div>
           </div>
         </div>
@@ -374,4 +323,4 @@ const SceneEditPage = () => {
   );
 };
 
-export default SceneEditPage; 
+export default SceneEditPage;

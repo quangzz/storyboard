@@ -1,17 +1,32 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BsChevronLeft, BsPerson, BsGear, BsBell } from 'react-icons/bs';
+import { BsChevronLeft, BsPerson, BsGear, BsBell, BsCamera } from 'react-icons/bs';
+import Header from '../components/Header';
 
 const UserPage = () => {
   const navigate = useNavigate();
-  const [user] = useState({
+  const [user, setUser] = useState({
     name: 'John Doe',
     email: 'john.doe@example.com',
-    avatar: 'https://via.placeholder.com/150',
+    avatar: null,
     role: 'Content Creator'
   });
 
   const [activeTab, setActiveTab] = useState('profile');
+
+  const handleImageUpload = (e, type) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setUser(prev => ({
+          ...prev,
+          [type]: event.target.result
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const menuItems = [
     { id: 'profile', label: 'Profile', icon: <BsPerson className="w-5 h-5" /> },
@@ -21,20 +36,7 @@ const UserPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-100 rounded-full"
-            >
-              <BsChevronLeft className="w-6 h-6" />
-            </button>
-            <h1 className="text-2xl font-bold">User Profile</h1>
-          </div>
-        </div>
-      </div>
+      <Header showBack title="User Profile" />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-12 gap-8">
@@ -43,16 +45,66 @@ const UserPage = () => {
             <div className="bg-white rounded-lg shadow p-6">
               {/* User Info */}
               <div className="text-center mb-6">
-                <div className="relative inline-block">
-                  <img 
-                    src={user.avatar} 
-                    alt={user.name}
-                    className="w-32 h-32 rounded-full mb-4 border-4 border-purple-100"
+                {/* Profile Image Upload */}
+                <div className="relative inline-block mb-4">
+                  <div className="w-32 h-32 rounded-lg overflow-hidden border-4 border-purple-100">
+                    {user.avatar ? (
+                      <img 
+                        src={user.avatar} 
+                        alt={user.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+                        <BsPerson className="w-12 h-12 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="avatar-upload"
+                    onChange={(e) => handleImageUpload(e, 'avatar')}
+                    className="hidden"
                   />
-                  <button className="absolute bottom-4 right-0 bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700">
-                    <BsGear className="w-4 h-4" />
-                  </button>
+                  <label 
+                    htmlFor="avatar-upload"
+                    className="absolute bottom-2 right-2 p-2 bg-purple-600 text-white rounded-full cursor-pointer hover:bg-purple-700 transition-colors"
+                  >
+                    <BsCamera className="w-4 h-4" />
+                  </label>
                 </div>
+
+                {/* Profile Image A Upload */}
+                <div className="relative inline-block mb-4">
+                  <div className="w-32 h-32 rounded-lg overflow-hidden border-4 border-purple-100">
+                    {user.avatarA ? (
+                      <img 
+                        src={user.avatarA} 
+                        alt="Profile A"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+                        <BsPerson className="w-12 h-12 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="avatar-a-upload"
+                    onChange={(e) => handleImageUpload(e, 'avatarA')}
+                    className="hidden"
+                  />
+                  <label 
+                    htmlFor="avatar-a-upload"
+                    className="absolute bottom-2 right-2 p-2 bg-purple-600 text-white rounded-full cursor-pointer hover:bg-purple-700 transition-colors"
+                  >
+                    <BsCamera className="w-4 h-4" />
+                  </label>
+                </div>
+
                 <h2 className="text-xl font-bold">{user.name}</h2>
                 <p className="text-gray-600">{user.role}</p>
               </div>
