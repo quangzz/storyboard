@@ -181,7 +181,7 @@ const SceneEditPage = () => {
             </div>
 
             {/* Scene Frame */}
-            <div className="border rounded-lg mb-4 overflow-hidden bg-gray-50">
+            <div className="border border-gray-300 rounded-lg mb-4 overflow-hidden bg-gray-50">
               <div className="aspect-[16/9] relative">
                 {sceneData.image ? (
                   <div className="relative w-full h-full group overflow-hidden">
