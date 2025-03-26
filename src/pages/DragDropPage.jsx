@@ -3,27 +3,159 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { AiOutlinePlus, AiOutlineDelete } from "react-icons/ai";
 import { BsChevronLeft, BsChevronRight, BsX } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
+import { useScenes } from '../context/SceneContext';
+
+const Scene = ({ scene, index, onDelete, onEdit, onImageChange, onAudioUpload, onDeleteAudio, editingScene, tempDescription, tempVoiceOver, setTempDescription, setTempVoiceOver, handleSave }) => {
+  return (
+    <div className="text-center bg-white p-4 rounded-lg">
+      {/* Scene Navigation */}
+      <div className="inline-flex border border-gray-300 mb-1">
+        <button 
+          className="px-2 border-r border-gray-300"
+          onClick={() => onDelete(scene.id)}
+        >×</button>
+        <button className="px-2 border-r border-gray-300">≪</button>
+        <button className="px-2">≫</button>
+      </div>
+
+      {/* Scene Info */}
+      <div className="text-center mb-1">
+        <div>SCENE#:{scene.sceneNumber}</div>
+        <div>SHOT#:{scene.shot}</div>
+        <div>TIME#:{scene.time}</div>
+      </div>
+
+      {/* Scene Frame */}
+      <div className="mx-auto mb-2" style={{ width: '390px' }}>
+        <div className="border border-gray-300" style={{ width: '390px', height: '220px' }}>
+          {scene.image ? (
+            <img 
+              src={scene.image} 
+              alt={`Scene ${scene.sceneNumber}`}
+              className="w-full h-full object-contain"
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center">
+              <div className="text-sm mb-2">390 x 220</div>
+              <div className="flex items-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  id={`file-upload-${scene.id}`}
+                  onChange={(e) => onImageChange(e, scene.id)}
+                  className="hidden"
+                />
+                <label 
+                  htmlFor={`file-upload-${scene.id}`}
+                  className="cursor-pointer px-2 py-1 border border-gray-300 text-sm"
+                >
+                  Chọn tệp
+                </label>
+                <span className="ml-2 text-sm text-gray-500">Chưa có tệp nào được chọn</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Description */}
+      <div className="text-center mb-2 max-w-[390px] mx-auto">
+        {editingScene === scene.id ? (
+          <textarea
+            value={tempDescription}
+            onChange={(e) => setTempDescription(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded mb-2"
+            rows="3"
+          />
+        ) : (
+          <div 
+            onClick={() => onEdit(scene)}
+            className="cursor-pointer hover:bg-gray-50 p-2"
+          >
+            {scene.description}
+          </div>
+        )}
+      </div>
+
+      {/* Voice Over */}
+      <div className="text-center max-w-[390px] mx-auto">
+        <div className="text-gray-400">Voice over</div>
+        <div className="mb-2">
+          <input
+            type="file"
+            accept=".mp3,.wav"
+            id={`audio-upload-${scene.id}`}
+            onChange={(e) => onAudioUpload(e, scene.id)}
+            className="hidden"
+          />
+          <label 
+            htmlFor={`audio-upload-${scene.id}`}
+            className="cursor-pointer px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block mb-2"
+          >
+            {scene.audioFile ? 'Replace Audio' : 'Upload Audio'}
+          </label>
+          {scene.audioFile && (
+            <div className="flex items-center justify-center gap-2">
+              <div className="text-sm text-gray-600">
+                {scene.audioFile}
+              </div>
+              <button
+                onClick={() => onDeleteAudio(scene.id)}
+                className="text-red-500 hover:text-red-700"
+              >
+                <AiOutlineDelete size={18} />
+              </button>
+            </div>
+          )}
+        </div>
+        {scene.audioUrl && (
+          <audio controls className="w-full mb-2">
+            <source src={scene.audioUrl} type="audio/mpeg" />
+            Your browser does not support the audio element.
+          </audio>
+        )}
+        {editingScene === scene.id ? (
+          <>
+            <textarea
+              value={tempVoiceOver}
+              onChange={(e) => setTempVoiceOver(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded mb-2"
+              rows="2"
+              placeholder="Add voice over transcript here..."
+            />
+            <button
+              onClick={() => handleSave(scene.id)}
+              className="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600"
+            >
+              Save
+            </button>
+          </>
+        ) : (
+          <div 
+            onClick={() => onEdit(scene)}
+            className="cursor-pointer hover:bg-gray-50 p-2"
+          >
+            {scene.voiceOver || "Add voice over transcript..."}
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Navigation */}
+      <div className="inline-flex border border-gray-300 mt-2">
+        <button 
+          className="px-2 border-r border-gray-300"
+          onClick={() => onDelete(scene.id)}
+        >×</button>
+        <button className="px-2 border-r border-gray-300">≪</button>
+        <button className="px-2">≫</button>
+      </div>
+    </div>
+  );
+};
 
 const DragDropPage = () => {
   const navigate = useNavigate();
-  const [scenes, setScenes] = useState([
-    { 
-      id: "1", 
-      sceneNumber: "1.1",
-      shot: "Static",
-      time: "6",
-      description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.",
-      voiceOver: "Lorem ipsum dolor sit amet."
-    },
-    { 
-      id: "2", 
-      sceneNumber: "1.1",
-      shot: "Static",
-      time: "5",
-      description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.",
-      voiceOver: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam"
-    }
-  ]);
+  const { scenes, setScenes, deleteScene } = useScenes();
 
   const [editingScene, setEditingScene] = useState(null);
   const [tempDescription, setTempDescription] = useState("");
@@ -42,9 +174,8 @@ const DragDropPage = () => {
     }, ...prev]);
   };
 
-  // Xử lý kéo-thả chính xác
   const handleDragEnd = (result) => {
-    if (!result.destination) return; // Nếu kéo ra ngoài thì không làm gì
+    if (!result.destination) return;
 
     const updatedScenes = Array.from(scenes);
     const [movedScene] = updatedScenes.splice(result.source.index, 1);
@@ -53,15 +184,9 @@ const DragDropPage = () => {
     setScenes(updatedScenes);
   };
 
-  // Xóa cảnh, giữ ô trống để có thể chèn lại
   const handleDeleteScene = (id) => {
-    setScenes(scenes.map(scene => {
-      if (scene.id === id) {
-        addToHistory('Delete Scene', `Deleted scene ${scene.sceneNumber || id}`);
-        return { id, sceneNumber: "", shot: "", time: "", description: "", voiceOver: "" };
-      }
-      return scene;
-    }));
+    deleteScene(id);
+    addToHistory('Delete Scene', `Deleted scene ${id}`);
   };
 
   // Thêm cảnh mới vào vị trí bất kỳ
@@ -71,16 +196,26 @@ const DragDropPage = () => {
       return;
     }
 
+    // Tìm số thứ tự lớn nhất hiện tại
+    const maxSceneNumber = scenes.reduce((max, scene) => {
+      if (!scene.sceneNumber) return max;
+      const currentNumber = parseFloat(scene.sceneNumber);
+      return currentNumber > max ? currentNumber : max;
+    }, 0);
+
+    // Tạo số thứ tự mới (tăng 0.1)
+    const newSceneNumber = (maxSceneNumber + 0.1).toFixed(1);
+
     const newScene = {
       id: Date.now().toString(),
-      sceneNumber: "",
+      sceneNumber: newSceneNumber,
       shot: "",
       time: "",
       description: "",
       voiceOver: ""
     };
     setScenes([...scenes, newScene]);
-    addToHistory('Add Scene', `Added new scene`);
+    addToHistory('Add Scene', `Added new scene ${newSceneNumber}`);
   };
 
   // Handle image change
@@ -149,45 +284,55 @@ const DragDropPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto py-4">
-        {/* Title */}
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">AI Storyboard Generator</h1>
-          <button 
-            onClick={() => navigate('/upload')}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
-          >
-            Upload Script
-          </button>
-        </div>
-        
-        {/* Navigation */}
-        <div className="text-center mb-4">
-          <a href="#" className="text-purple-600">Home</a>
-          <span className="text-purple-600">/</span>
-          <a href="#" className="text-purple-600">Storyboard Editor</a>
-        </div>
-
-        {/* User Info */}
-        <div className="text-center mb-4">
-          <div>Minkhoang</div>
-          <div className="text-sm text-gray-500">Urah Member</div>
-        </div>
-
-        {/* Project */}
-        <div className="text-center mb-4">
-          <h2 className="font-bold mb-2">Project</h2>
-          <div className="mb-2">
-            <span>Project_new</span>
-            <span className="ml-1">□</span>
+        {/* Header Menu */}
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center space-x-4">
+              <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                Home
+              </button>
+              <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                Storyboard
+              </button>
+              <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                Styleframe
+              </button>
+              <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                Script
+              </button>
+              <button 
+                onClick={() => navigate(`/scene/${scenes[0]?.id || 'new'}`)}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                Scene Editor
+              </button>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <div className="font-medium">Minkhoang</div>
+                <div className="text-sm text-gray-500">Urah Member</div>
+              </div>
+              <button 
+                onClick={() => navigate('/upload')}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              >
+                Upload Script
+              </button>
+            </div>
           </div>
-          <div className="space-y-1 text-sm">
-            <div>Script</div>
-            <div>Storyboard</div>
-            <div>Styleframe</div>
-            <div>Project_01</div>
-            <div>Project_02</div>
-            <div>Project_ongo...</div>
-            <div>Project_01(2)</div>
+        </div>
+
+        {/* Project Info */}
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h2 className="font-bold text-lg">Project</h2>
+              <div className="text-gray-600">Project_new</div>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-gray-500">Last saved: 2 minutes ago</div>
+              <div className="text-sm text-gray-500">Version: 1.0</div>
+            </div>
           </div>
         </div>
 
@@ -265,146 +410,34 @@ const DragDropPage = () => {
                         {...provided.dragHandleProps}
                         className="text-center bg-white p-4 rounded-lg"
                       >
-                        {/* Scene Navigation */}
+                        <Scene
+                          scene={scene}
+                          index={index}
+                          onDelete={handleDeleteScene}
+                          onEdit={handleEdit}
+                          onImageChange={handleImageChange}
+                          onAudioUpload={handleAudioUpload}
+                          onDeleteAudio={handleDeleteAudio}
+                          editingScene={editingScene}
+                          tempDescription={tempDescription}
+                          tempVoiceOver={tempVoiceOver}
+                          setTempDescription={setTempDescription}
+                          setTempVoiceOver={setTempVoiceOver}
+                          handleSave={handleSave}
+                        />
                         <div className="inline-flex border border-gray-300 mb-1">
                           <button 
                             className="px-2 border-r border-gray-300"
                             onClick={() => handleDeleteScene(scene.id)}
                           >×</button>
                           <button className="px-2 border-r border-gray-300">≪</button>
-                          <button className="px-2">≫</button>
-                        </div>
-
-                        {/* Scene Info */}
-                        <div className="text-center mb-1">
-                          <div>SCENE#:{scene.sceneNumber}</div>
-                          <div>SHOT#:{scene.shot}</div>
-                          <div>TIME#:{scene.time}</div>
-                        </div>
-
-                        {/* Scene Frame */}
-                        <div className="mx-auto mb-2" style={{ width: '390px' }}>
-                          <div className="border border-gray-300" style={{ width: '390px', height: '220px' }}>
-                            {scene.image ? (
-                              <img 
-                                src={scene.image} 
-                                alt={`Scene ${scene.sceneNumber}`}
-                                className="w-full h-full object-contain"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex flex-col items-center justify-center">
-                                <div className="text-sm mb-2">390 x 220</div>
-                                <div className="flex items-center">
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    id={`file-upload-${scene.id}`}
-                                    onChange={(e) => handleImageChange(e, scene.id)}
-                                    className="hidden"
-                                  />
-                                  <label 
-                                    htmlFor={`file-upload-${scene.id}`}
-                                    className="cursor-pointer px-2 py-1 border border-gray-300 text-sm"
-                                  >
-                                    Chọn tệp
-                                  </label>
-                                  <span className="ml-2 text-sm text-gray-500">Chưa có tệp nào được chọn</span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Description */}
-                        <div className="text-center mb-2 max-w-[390px] mx-auto">
-                          {editingScene === scene.id ? (
-                            <textarea
-                              value={tempDescription}
-                              onChange={(e) => setTempDescription(e.target.value)}
-                              className="w-full p-2 border border-gray-300 rounded mb-2"
-                              rows="3"
-                            />
-                          ) : (
-                            <div 
-                              onClick={() => handleEdit(scene)}
-                              className="cursor-pointer hover:bg-gray-50 p-2"
-                            >
-                              {scene.description}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Voice Over */}
-                        <div className="text-center max-w-[390px] mx-auto">
-                          <div className="text-gray-400">Voice over</div>
-                          <div className="mb-2">
-                            <input
-                              type="file"
-                              accept=".mp3,.wav"
-                              id={`audio-upload-${scene.id}`}
-                              onChange={(e) => handleAudioUpload(e, scene.id)}
-                              className="hidden"
-                            />
-                            <label 
-                              htmlFor={`audio-upload-${scene.id}`}
-                              className="cursor-pointer px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 inline-block mb-2"
-                            >
-                              {scene.audioFile ? 'Replace Audio' : 'Upload Audio'}
-                            </label>
-                            {scene.audioFile && (
-                              <div className="flex items-center justify-center gap-2">
-                                <div className="text-sm text-gray-600">
-                                  {scene.audioFile}
-                                </div>
-                                <button
-                                  onClick={() => handleDeleteAudio(scene.id)}
-                                  className="text-red-500 hover:text-red-700"
-                                >
-                                  <AiOutlineDelete size={18} />
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                          {scene.audioUrl && (
-                            <audio controls className="w-full mb-2">
-                              <source src={scene.audioUrl} type="audio/mpeg" />
-                              Your browser does not support the audio element.
-                            </audio>
-                          )}
-                          {editingScene === scene.id ? (
-                            <>
-                              <textarea
-                                value={tempVoiceOver}
-                                onChange={(e) => setTempVoiceOver(e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded mb-2"
-                                rows="2"
-                                placeholder="Add voice over transcript here..."
-                              />
-                              <button
-                                onClick={() => handleSave(scene.id)}
-                                className="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600"
-                              >
-                                Save
-                              </button>
-                            </>
-                          ) : (
-                            <div 
-                              onClick={() => handleEdit(scene)}
-                              className="cursor-pointer hover:bg-gray-50 p-2"
-                            >
-                              {scene.voiceOver || "Add voice over transcript..."}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Bottom Navigation */}
-                        <div className="inline-flex border border-gray-300 mt-2">
+                          <button className="px-2 border-r border-gray-300">≫</button>
                           <button 
-                            className="px-2 border-r border-gray-300"
-                            onClick={() => handleDeleteScene(scene.id)}
-                          >×</button>
-                          <button className="px-2 border-r border-gray-300">≪</button>
-                          <button className="px-2">≫</button>
+                            className="px-2 text-blue-600 hover:bg-blue-50"
+                            onClick={() => navigate(`/scene/${scene.id}`)}
+                          >
+                            Edit
+                          </button>
                         </div>
                       </div>
                     )}
