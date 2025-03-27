@@ -14,6 +14,14 @@ const UserPage = () => {
 
   const [activeTab, setActiveTab] = useState('profile');
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setUser(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleImageUpload = (e, type) => {
     const file = e.target.files[0];
     if (file) {
@@ -142,7 +150,9 @@ const UserPage = () => {
                       </label>
                       <input
                         type="text"
+                        name="name"
                         value={user.name}
+                        onChange={handleInputChange}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />
                     </div>
@@ -152,7 +162,9 @@ const UserPage = () => {
                       </label>
                       <input
                         type="email"
+                        name="email"
                         value={user.email}
+                        onChange={handleInputChange}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />
                     </div>
@@ -162,7 +174,9 @@ const UserPage = () => {
                       </label>
                       <input
                         type="text"
+                        name="role"
                         value={user.role}
+                        onChange={handleInputChange}
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />
                     </div>
