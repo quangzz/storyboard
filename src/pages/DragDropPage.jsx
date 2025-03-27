@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { AiOutlinePlus, AiOutlineDelete, AiOutlineFileAdd } from "react-icons/ai";
 import { BsChevronLeft, BsChevronRight, BsX, BsPlus, BsChevronDown, BsGripVertical, BsFolder } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
 import { useScenes } from '../context/SceneContext';
 import Header from '../components/Header';
+import Sidebar from '../components/Sidebar';
 import '../styles/DragDrop.css';
 
 const Scene = ({ scene, index, onDelete, onEdit, onImageChange, onAudioUpload, onDeleteAudio, editingScene, tempDescription, tempVoiceOver, setTempDescription, setTempVoiceOver, handleSave }) => {
@@ -189,6 +190,31 @@ const EmptyScenePlaceholder = ({ onClick, index }) => (
 const DragDropPage = () => {
   const navigate = useNavigate();
   const { scenes, setScenes, deleteScene } = useScenes();
+  const [activeTab, setActiveTab] = useState('storyboard');
+
+  useEffect(() => {
+    if (scenes.length === 0) {
+      const initialScenes = [
+        {
+          id: '1',
+          sceneNumber: '1.0',
+          shot: 'Static',
+          time: '6',
+          description: 'Initial scene description',
+          voiceOver: ''
+        },
+        {
+          id: '2',
+          sceneNumber: '2.0',
+          shot: 'Zoom-in ►',
+          time: '6',
+          description: 'Second scene description',
+          voiceOver: ''
+        }
+      ];
+      setScenes(initialScenes);
+    }
+  }, []);
 
   const [editingScene, setEditingScene] = useState(null);
   const [tempDescription, setTempDescription] = useState("");
@@ -197,6 +223,28 @@ const DragDropPage = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [editHistory, setEditHistory] = useState([]);
   const [deletedSceneIndexes, setDeletedSceneIndexes] = useState([]);
+
+  const [activeProject, setActiveProject] = useState(null);
+
+  const projects = [
+    {
+      id: 1,
+      name: 'Project Alpha',
+      hasFiles: true,
+      subItems: ['Scene 1', 'Scene 2', 'Scene 3']
+    },
+    {
+      id: 2,
+      name: 'Project Beta',
+      hasFiles: true,
+      subItems: ['Scene 1', 'Scene 2']
+    },
+    {
+      id: 3,
+      name: 'Project Gamma',
+      hasFiles: false
+    }
+  ];
 
   // Thêm vào lịch sử mỗi khi có thay đổi
   const addToHistory = (action, details) => {
@@ -367,53 +415,25 @@ const DragDropPage = () => {
     addToHistory('Update Shot', `Changed shot to ${newShot}`);
   };
 
+  const handleProjectClick = (project) => {
+    if (activeProject === project.id) {
+      setActiveProject(null);
+    } else {
+      setActiveProject(project.id);
+      if (project.hasFiles) {
+        navigate('/dragdrop');
+      }
+    }
+  };
+
   return (
-    <div className="app-container">
-      {/* Sidebar */}
-      <div className="sidebar">
-        <div className="user-info">
-          <div className="user-avatar"></div>
-          <div>
-            <div className="user-name">Minkhoang</div>
-            <div className="user-role">Urah Member</div>
-          </div>
-        </div>
+    <div className="dragdrop-container">
+      <Sidebar
+        projects={projects}
+        activeProject={activeProject}
+        onProjectClick={handleProjectClick}
+      />
 
-        <div className="project-section">
-          <div className="project-header">Project</div>
-          <div className="project-dropdown">
-            <span>Project_new</span>
-            <BsChevronDown />
-          </div>
-
-          <div className="project-submenu">
-            <div className="submenu-item">Script</div>
-            <div className="submenu-item active">Storyboard</div>
-            <div className="submenu-item">Styleframe</div>
-          </div>
-
-          <div className="project-list">
-            <div className="project-item">
-              <BsChevronRight className="icon" />
-              <span>Project_01</span>
-            </div>
-            <div className="project-item">
-              <BsChevronRight className="icon" />
-              <span>Project_02</span>
-            </div>
-            <div className="project-item">
-              <BsChevronRight className="icon" />
-              <span>Project_ongo...</span>
-            </div>
-            <div className="project-item">
-              <BsChevronRight className="icon" />
-              <span>Project_01(2)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
       <div className="main-content">
         <Header title="Storyboard Generator" />
         <div className="max-w-4xl mx-auto py-4">
@@ -424,17 +444,26 @@ const DragDropPage = () => {
                 <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
                   Home
                 </button>
-                <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <button 
+                  className={`px-4 py-2 rounded-lg ${activeTab === 'storyboard' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                  onClick={() => setActiveTab('storyboard')}
+                >
                   Storyboard
                 </button>
-                <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <button 
+                  className={`px-4 py-2 rounded-lg ${activeTab === 'styleframe' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                  onClick={() => setActiveTab('styleframe')}
+                >
                   Styleframe
                 </button>
-                <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <button 
+                  className={`px-4 py-2 rounded-lg ${activeTab === 'script' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                  onClick={() => setActiveTab('script')}
+                >
                   Script
                 </button>
                 <button 
-                  onClick={() => navigate(`/scene/${scenes[0]?.id || 'new'}`)}
+                  onClick={() => navigate('/scene/new')}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >
                   Scene Editor

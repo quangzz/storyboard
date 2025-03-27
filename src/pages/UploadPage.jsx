@@ -1,73 +1,91 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AiOutlineUpload } from 'react-icons/ai';
+import { useNavigate, useLocation } from 'react-router-dom';
+import Sidebar from '../components/Sidebar';
+import '../styles/Upload.css';
 
 const UploadPage = () => {
   const navigate = useNavigate();
-  const [file, setFile] = useState(null);
-  const [isUploaded, setIsUploaded] = useState(false);
+  const location = useLocation();
+  const [projectName, setProjectName] = useState('');
+  const [activeTab, setActiveTab] = useState('New');
+  const [showMessage, setShowMessage] = useState(false);
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    setFile(selectedFile);
-  };
-
-  const handleUpload = () => {
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
     if (file) {
-      // Xử lý upload file ở đây
-      setIsUploaded(true);
+      // Kiểm tra định dạng file
+      const fileType = file.type;
+      const validTypes = ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain'];
+      
+      if (!validTypes.includes(fileType)) {
+        alert('Please upload only .docx, .xlsx, or .txt files');
+        return;
+      }
+
+      setShowMessage(true);
+      setTimeout(() => {
+        setShowMessage(false);
+        navigate('/dragdrop');
+      }, 2000);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="max-w-2xl w-full p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center mb-8">Upload Script</h1>
-        
-        {!isUploaded ? (
-          <div className="space-y-6">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-              <AiOutlineUpload className="mx-auto text-4xl text-gray-400 mb-4" />
-              <input
-                type="file"
-                onChange={handleFileChange}
-                className="hidden"
-                id="file-upload"
-                accept=".txt,.doc,.docx"
-              />
-              <label
-                htmlFor="file-upload"
-                className="cursor-pointer text-purple-600 hover:text-purple-700"
-              >
-                Click to upload
-              </label>
-              <p className="text-gray-500 mt-2">or drag and drop</p>
-              <p className="text-sm text-gray-400 mt-2">TXT, DOC, DOCX up to 10MB</p>
-            </div>
+    <div className="upload-container">
+      <Sidebar />
+      
+      <div className="main-content">
+        <div className="tabs">
+          <button 
+            className={`tab ${activeTab === 'New' ? 'active' : ''}`}
+            onClick={() => setActiveTab('New')}
+          >
+            New
+          </button>
+          <button 
+            className={`tab ${activeTab === 'Boarder' ? 'active' : ''}`}
+            onClick={() => setActiveTab('Boarder')}
+          >
+            Boarder
+          </button>
+          <button 
+            className={`tab ${activeTab === 'History' ? 'active' : ''}`}
+            onClick={() => setActiveTab('History')}
+          >
+            History
+          </button>
+        </div>
 
-            <button
-              onClick={handleUpload}
-              disabled={!file}
-              className={`w-full py-3 rounded-lg text-white ${
-                file ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-400 cursor-not-allowed'
-              }`}
-            >
-              Upload
-            </button>
+        <div className="upload-content">
+          <div className="project-input">
+            <input
+              type="text"
+              placeholder="projectname..."
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+            />
+            <div className="version">16.9</div>
           </div>
-        ) : (
-          <div className="text-center space-y-4">
-            <div className="text-green-500 text-4xl mb-4">✓</div>
-            <h2 className="text-xl font-semibold">Upload Successful!</h2>
-            <p className="text-gray-600">Your script has been uploaded successfully.</p>
-            <button
-              onClick={() => navigate('/drag-drop')}
-              className="mt-6 bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700"
-            >
-              Go to Storyboard
-            </button>
-          </div>
-        )}
+
+          {showMessage && (
+            <div className="success-message">
+              Đã tải lên thành công
+            </div>
+          )}
+
+          <button 
+            className="create-project-button"
+            onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept='.docx,.xlsx,.txt';
+              input.onchange = handleFileUpload;
+              input.click();
+            }}
+          >
+            Create new project with<br/>.docx, .xlsx, .txt
+          </button>
+        </div>
       </div>
     </div>
   );
