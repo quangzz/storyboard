@@ -443,4 +443,73 @@
 .scene-control-button:not(:first-child):hover {
   background: #f3f4f6;
   border-color: #d1d5db;
+}
+
+.shot-dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.shot-button {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 100px;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.shot-button:hover {
+  background: #e9ecef;
+}
+
+.shot-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 4px;
+  min-width: 120px;
+  animation: fadeIn 0.2s ease;
+}
+
+.shot-option {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #495057;
+  transition: all 0.2s ease;
+}
+
+.shot-option:hover {
+  background: #f8f9fa;
+  color: #7B61FF;
+}
+
+.shot-option.active {
+  background: #7B61FF;
+  color: white;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 } 

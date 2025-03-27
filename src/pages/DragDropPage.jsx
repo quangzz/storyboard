@@ -8,6 +8,20 @@ import Header from '../components/Header';
 import '../styles/DragDrop.css';
 
 const Scene = ({ scene, index, onDelete, onEdit, onImageChange, onAudioUpload, onDeleteAudio, editingScene, tempDescription, tempVoiceOver, setTempDescription, setTempVoiceOver, handleSave }) => {
+  const [showShotOptions, setShowShotOptions] = useState(false);
+
+  const shotOptions = [
+    'Static',
+    'Zoom-out ►',
+    'Zoom-in ►',
+    'Zoom-out end'
+  ];
+
+  const handleShotChange = (newShot) => {
+    onEdit(scene.id, 'shot', newShot);
+    setShowShotOptions(false);
+  };
+
   return (
     <div className="scene-card">
       <div className="scene-header">
@@ -31,7 +45,27 @@ const Scene = ({ scene, index, onDelete, onEdit, onImageChange, onAudioUpload, o
         </div>
         <div className="scene-info-item">
           <div className="scene-info-label">SHOT#:</div>
-          <div>{scene.shot}</div>
+          <div className="shot-dropdown-container">
+            <button 
+              className="shot-button"
+              onClick={() => setShowShotOptions(!showShotOptions)}
+            >
+              {scene.shot || 'Static'}
+            </button>
+            {showShotOptions && (
+              <div className="shot-options">
+                {shotOptions.map((option) => (
+                  <button
+                    key={option}
+                    className={`shot-option ${scene.shot === option ? 'active' : ''}`}
+                    onClick={() => handleShotChange(option)}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <div className="scene-info-item">
           <div className="scene-info-label">TIME#:</div>
@@ -322,6 +356,17 @@ const DragDropPage = () => {
     setScenes(newScenes);
   };
 
+  const handleShotChange = (sceneId, newShot) => {
+    setScenes(prevScenes => 
+      prevScenes.map(scene => 
+        scene.id === sceneId 
+          ? { ...scene, shot: newShot }
+          : scene
+      )
+    );
+    addToHistory('Update Shot', `Changed shot to ${newShot}`);
+  };
+
   return (
     <div className="app-container">
       {/* Sidebar */}
@@ -515,7 +560,19 @@ const DragDropPage = () => {
                               scene={scene}
                               index={index}
                               onDelete={handleDeleteScene}
-                              onEdit={handleEdit}
+                              onEdit={(sceneId, field, value) => {
+                                if (field === 'shot') {
+                                  handleShotChange(sceneId, value);
+                                } else {
+                                  setScenes(prevScenes =>
+                                    prevScenes.map(scene =>
+                                      scene.id === sceneId
+                                        ? { ...scene, [field]: value }
+                                        : scene
+                                    )
+                                  );
+                                }
+                              }}
                               onImageChange={handleImageChange}
                               onAudioUpload={handleAudioUpload}
                               onDeleteAudio={handleDeleteAudio}
