@@ -1,122 +1,103 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/Login.css';
+import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    confirmPassword: '',
-    username: ''
+    password: ''
   });
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (isLogin) {
-      // Handle login
-      console.log('Login with:', formData.email, formData.password);
-      navigate('/home'); // Navigate to home page after login
-    } else {
-      // Handle registration
-      if (formData.password !== formData.confirmPassword) {
-        alert('Passwords do not match!');
-        return;
-      }
-      console.log('Register with:', formData);
-      // After successful registration, switch to login
-      setIsLogin(true);
-    }
+    login();
+    navigate('/dashboard');
+  };
+
+  // Sử dụng đường dẫn tuyệt đối từ thư mục public
+  const backgroundStyle = {
+    minHeight: '100vh',
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: `url('${process.env.PUBLIC_URL}/01-01-01 1.png')`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+  };
+
+  const containerStyle = {
+    width: '100%',
+    maxWidth: '400px',
+    padding: '2rem',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: '8px',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    margin: '0 1rem',
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '0.75rem',
+    marginTop: '0.5rem',
+    marginBottom: '1rem',
+    border: '1px solid #ccc',
+    borderRadius: '4px',
+    fontSize: '1rem',
+  };
+
+  const buttonStyle = {
+    width: '100%',
+    padding: '0.75rem',
+    backgroundColor: '#805ad5',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    fontSize: '1rem',
+    cursor: 'pointer',
   };
 
   return (
-    <div className="login-container">
-      <div className="login-box">
-        <h2>{isLogin ? 'Login' : 'Create Account'}</h2>
+    <div style={backgroundStyle}>
+      <div style={containerStyle}>
+        <h2 style={{ textAlign: 'center', marginBottom: '2rem', fontSize: '1.5rem', fontWeight: 'bold' }}>
+          Welcome to Storyboard
+        </h2>
+        
         <form onSubmit={handleSubmit}>
-          {!isLogin && (
-            <div className="form-group">
-              <label>Username</label>
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleInputChange}
-                placeholder="Enter your username"
-                required
-              />
-            </div>
-          )}
-          
-          <div className="form-group">
-            <label>Email</label>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+              Email
+            </label>
             <input
               type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              placeholder="Enter your email"
               required
+              style={inputStyle}
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
 
-          <div className="form-group">
-            <label>Password</label>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+              Password
+            </label>
             <input
               type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              placeholder="Enter your password"
               required
+              style={inputStyle}
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
           </div>
 
-          {!isLogin && (
-            <div className="form-group">
-              <label>Confirm Password</label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                placeholder="Confirm your password"
-                required
-              />
-            </div>
-          )}
-
-          <button type="submit" className="submit-button">
-            {isLogin ? 'Login' : 'Create Account'}
+          <button type="submit" style={buttonStyle}>
+            Sign in
           </button>
         </form>
-
-        <div className="switch-form">
-          {isLogin ? (
-            <p>
-              Don't have an account?{' '}
-              <button onClick={() => setIsLogin(false)}>
-                Create one
-              </button>
-            </p>
-          ) : (
-            <p>
-              Already have an account?{' '}
-              <button onClick={() => setIsLogin(true)}>
-                Login
-              </button>
-            </p>
-          )}
-        </div>
       </div>
     </div>
   );

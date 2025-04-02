@@ -1,0 +1,45 @@
+@keyframes slideIn {
+    from {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .success-message {
+    animation: slideIn 0.3s ease-out;
+    background-color: #4ADE80;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+  }
+  
+  .save-button {
+    background-color: #7662AB !important;
+    color: white !important;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  
+  .save-button:hover {
+    background-color: #6B4FE6 !important;
+  }
+  
+  button[class*="bg-green"] {
+    background-color: #7662AB !important;
+  }
+  
+  button[class*="bg-green"]:hover {
+    background-color: #6B4FE6 !important;
+  } 
+  

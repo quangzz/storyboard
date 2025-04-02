@@ -1,19 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BsChevronLeft, BsChevronRight, BsMusicNote } from 'react-icons/bs';
-import { AiOutlineZoomIn, AiOutlineZoomOut } from 'react-icons/ai';
+import { BsChevronLeft, BsChevronRight } from 'react-icons/bs';
 
 const SceneEditPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const imageRef = useRef(null);
-  const [audioUrl, setAudioUrl] = useState(null);
-  const [audioName, setAudioName] = useState('');
-
   const [sceneData, setSceneData] = useState({
     sceneNumber: '1.3',
     shot: 'Zoom-out',
@@ -48,50 +39,6 @@ const SceneEditPage = () => {
     }
   };
 
-  const handleAudioUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const audioUrl = URL.createObjectURL(file);
-      setAudioUrl(audioUrl);
-      setAudioName(file.name);
-    }
-  };
-
-  const handleZoomIn = () => {
-    if (zoomLevel < 2) {
-      setZoomLevel(prev => prev + 0.1);
-    }
-  };
-
-  const handleZoomOut = () => {
-    if (zoomLevel > 1) {
-      setZoomLevel(prev => prev - 0.1);
-    }
-  };
-
-  const handleMouseDown = (e) => {
-    if (zoomLevel > 1) {
-      setIsDragging(true);
-      setDragStart({
-        x: e.clientX - position.x,
-        y: e.clientY - position.y
-      });
-    }
-  };
-
-  const handleMouseMove = (e) => {
-    if (isDragging && zoomLevel > 1) {
-      setPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
   return (
     <div className="scene-editor">
       {/* Left Column */}
@@ -117,25 +64,11 @@ const SceneEditPage = () => {
         <div className="scene-content">
           <div className="scene-image-container">
             {sceneData.image ? (
-              <div 
-                className="w-full h-full"
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                style={{ cursor: zoomLevel > 1 ? 'move' : 'default' }}
-              >
-                <img 
-                  ref={imageRef}
-                  src={sceneData.image} 
-                  alt="Scene" 
-                  className="w-full h-full object-contain transition-transform duration-300 ease-out"
-                  style={{ 
-                    transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
-                    transformOrigin: 'center'
-                  }}
-                />
-              </div>
+              <img 
+                src={sceneData.image} 
+                alt="Scene" 
+                className="w-full h-full object-contain"
+              />
             ) : (
               <div className="text-center">
                 <div className="text-sm text-gray-400 mb-4">390 x 220</div>

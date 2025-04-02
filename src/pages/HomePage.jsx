@@ -73,30 +73,43 @@ const HomePage = () => {
   };
 
   return (
-    <div className="home-container">
-      <Sidebar
-        projects={projects}
-        activeProject={activeProject}
-        onProjectClick={handleProjectClick}
-      />
-
-      <div className="main-content">
-        <div className="content-header">
-          <h1>My Projects</h1>
-        </div>
-        
-        <button className="new-project-button" onClick={handleCreateProject}>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold text-gray-800">My Projects</h1>
+        <button 
+          className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+          onClick={() => navigate('/upload')}
+        >
           Create New Project
         </button>
+      </div>
 
-        <div className="projects-grid">
-          {projects.map((project) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {projects.map((project) => (
+          <div 
+            key={project.id}
+            className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/upload')}
+          >
             <ProjectCard
               key={project.id}
               project={project}
               onClick={() => handleProjectClick(project)}
             />
-          ))}
+          </div>
+        ))}
+
+        {/* Add Project Card */}
+        <div 
+          className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 hover:border-purple-400 transition-colors cursor-pointer flex items-center justify-center h-[200px]"
+          onClick={() => navigate('/upload')}
+        >
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mx-auto mb-2">
+              +
+            </div>
+            <span className="text-gray-600">Create New Project</span>
+          </div>
         </div>
       </div>
     </div>
